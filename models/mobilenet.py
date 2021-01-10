@@ -127,7 +127,6 @@ class MobileFaceNet(Module):
 # ArcFace head
 
 class Arcface(Module):
-    # implementation of additive margin softmax loss in https://arxiv.org/abs/1801.05599
     def __init__(self, embedding_size=512, classnum=51332, s=64., m=0.5):
         super(Arcface, self).__init__()
         self.classnum = classnum
