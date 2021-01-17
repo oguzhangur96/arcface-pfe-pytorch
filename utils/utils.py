@@ -168,16 +168,9 @@ def get_evaluate(carray, issame,model, nrof_folds = 5, tta = False):
 def pfe_evaluate(mu_embeddings, sig_sq_embeddings, actual_issame, nrof_folds=10, pca=0):
     # Calculate evaluation metrics
     thresholds = np.arange(-2960, -1719, 0.5)
-    print(len(mu_embeddings))
-    print(len(sig_sq_embeddings))
     mu_embeddings1, sig_sq_embeddings1 = mu_embeddings[0::2], sig_sq_embeddings[0::2]
     mu_embeddings2, sig_sq_embeddings2 = mu_embeddings[1::2], sig_sq_embeddings[1::2]
 
-    print(len(mu_embeddings1))
-    print(len(sig_sq_embeddings1))
-
-    print(len(mu_embeddings2))
-    print(len(sig_sq_embeddings2))
     tpr, fpr, accuracy, best_thresholds = pfe_calculate_roc(thresholds, mu_embeddings1, mu_embeddings2,
                                                 sig_sq_embeddings1, sig_sq_embeddings2,
                                        np.asarray(actual_issame), nrof_folds=nrof_folds, pca=pca)
@@ -261,10 +254,6 @@ def get_pfe_evaluate(carray, issame,model, pfe_model, nrof_folds = 5, tta = Fals
                 sg_sq_batch = torch.exp(pfe_model(conv_final_batch.to(device)))
                 embeddings[idx:] = mu_batch
                 embeddings_2[idx:] = sg_sq_batch
-    print(embeddings.min())
-    print(embeddings_2.min())
-    print(embeddings.max())
-    print(embeddings_2.max())
 
     tpr, fpr, accuracy, best_thresholds = pfe_evaluate(embeddings,embeddings_2, issame, nrof_folds)
     buf = gen_plot(fpr, tpr)
