@@ -44,10 +44,6 @@ def training_args():
     parser.add_argument('--pairs_file', type=str, default=osp.join(lfw_dir, 'anno_file/pairs.txt'))
     parser.add_argument('--try_times', type=int, default=5)
 
-    # -- verification
-    parser.add_argument('--n_folds', type=int, default=10)
-    parser.add_argument('--thresh_iv', type=float, default=0.005)
-
     # -- save or print
     parser.add_argument('--is_debug', type=str, default=False)
     parser.add_argument('--save_to', type=str, default=osp.join(cp_dir, 'pfe'))
