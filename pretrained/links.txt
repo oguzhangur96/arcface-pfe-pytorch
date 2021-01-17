@@ -1,0 +1,4 @@
+Link for pretrained mobilefacenet:
+https://1drv.ms/u/s!AhMqVPD44cDOhkSMHodSH4rhfb5u
+
+Please place it in this directory.
