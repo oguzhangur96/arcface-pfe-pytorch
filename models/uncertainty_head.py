@@ -17,8 +17,8 @@ class UncertaintyHead(nn.Module):
         self.relu = nn.ReLU(in_feat)
         self.fc2 = Parameter(torch.Tensor(in_feat, in_feat))
         self.bn2 = nn.BatchNorm1d(in_feat, affine=False)
-        self.gamma = Parameter(torch.Tensor([1.0]))
-        self.beta = Parameter(torch.Tensor([0.0]))  # default = -7.0
+        self.gamma = Parameter(torch.Tensor([0.0001]))
+        self.beta = Parameter(torch.Tensor([-7.0]))  # default = -7.0
 
         nn.init.kaiming_normal_(self.fc1)
         nn.init.kaiming_normal_(self.fc2)

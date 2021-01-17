@@ -31,7 +31,7 @@ class MLSLoss(nn.Module):
 
     def forward(self, mu_X, log_sigma_sq, gty):
 
-        mu_X = F.normalize(mu_X)  # if mu_X was not normalized by l2
+        # mu_X = F.normalize(mu_X)  # if mu_X was not normalized by l2
         non_diag_mask = (1 - torch.eye(mu_X.size(0))).int()
         if gty.device.type == 'cuda':
             non_diag_mask = non_diag_mask.cuda(0)

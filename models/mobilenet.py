@@ -121,7 +121,7 @@ class MobileFaceNet(Module):
         out = self.linear(out)
 
         out = self.bn(out)
-        return l2_norm(out), conv_final
+        return l2_norm(out) , conv_final
 
 
 # ArcFace head
