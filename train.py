@@ -65,9 +65,7 @@ class MetricFace(VerifyFace):
                 p.requires_grad = False
 
         self.model['optimizer'] = torch.optim.SGD(
-            [  # {'params': self.model['backbone'].parameters()},
-                # {'params': self.model['metric'].parameters()},
-                {'params': self.model['uncertain'].parameters()}],
+            [{'params': self.model['uncertain'].parameters()}],
             lr=self.args.base_lr,
             weight_decay=self.args.weight_decay,
             momentum=0.9,
@@ -83,7 +81,6 @@ class MetricFace(VerifyFace):
         if self.device and len(self.args.gpu_ids) > 1:
             self.model['backbone'] = torch.nn.DataParallel(self.model['backbone'], device_ids=self.args.gpu_ids)
             self.model['uncertain'] = torch.nn.DataParallel(self.model['uncertain'], device_ids=self.args.gpu_ids)
-            # self.model['metric']    = torch.nn.DataParallel(self.model['metric'],   device_ids=self.args.gpu_ids)
             print('Parallel mode was going ...')
         elif self.device:
             print('Single-gpu mode was going ...')

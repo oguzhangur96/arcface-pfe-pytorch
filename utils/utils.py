@@ -3,7 +3,7 @@ from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
 from torchvision.transforms.functional import hflip
-
+from data.data_pipe import de_preprocess
 import io
 from torchvision import transforms as trans
 import torch
@@ -50,7 +50,13 @@ def separate_bn_paras(modules):
                 paras_wo_bn.extend([*layer.parameters()])
     return paras_only_bn, paras_wo_bn
 
-
+hflip = trans.Compose([
+            de_preprocess,
+            trans.ToPILImage(),
+            trans.functional.hflip,
+            trans.ToTensor(),
+            trans.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
+        ])
 def hflip_batch(imgs_tensor):
     hfliped_imgs = torch.empty_like(imgs_tensor)
     for i, img_ten in enumerate(imgs_tensor):
@@ -146,16 +152,16 @@ def get_evaluate(carray, issame,model, nrof_folds = 5, tta = False):
             batch = torch.tensor(carray[idx:idx + 200])
             if tta:
                 fliped = hflip_batch(batch)
-                emb_batch = model(batch.to(device)) + model(fliped.to(device))
+                emb_batch = model(batch.to(device))[0] + model(fliped.to(device))[0]
                 embeddings[idx:idx + 200] = l2_norm(emb_batch)
             else:
-                embeddings[idx:idx + 200] = model(batch.to(device)).cpu()
+                embeddings[idx:idx + 200] = model(batch.to(device))[0].cpu()
             idx += 200
         if idx < len(carray):
             batch = torch.tensor(carray[idx:])
             if tta:
                 fliped = hflip_batch(batch)
-                emb_batch = model(batch.to(device)) + model(fliped.to(device))
+                emb_batch = model(batch.to(device))[0] + model(fliped.to(device))[0]
                 embeddings[idx:] = l2_norm(emb_batch)
             else:
                 embeddings[idx:] = model(batch.to(device)).cpu()
@@ -165,13 +171,12 @@ def get_evaluate(carray, issame,model, nrof_folds = 5, tta = False):
     roc_curve_tensor = trans.ToTensor()(roc_curve)
     return accuracy.mean(), best_thresholds.mean(), roc_curve_tensor
 
-def pfe_evaluate(mu_embeddings, sig_sq_embeddings, actual_issame, nrof_folds=10, pca=0):
+def pfe_evaluate(mu_embeddings, sig_sq_embeddings, actual_issame, nrof_folds=5, pca=0):
     # Calculate evaluation metrics
-    thresholds = np.arange(-2960, -1719, 0.5)
     mu_embeddings1, sig_sq_embeddings1 = mu_embeddings[0::2], sig_sq_embeddings[0::2]
     mu_embeddings2, sig_sq_embeddings2 = mu_embeddings[1::2], sig_sq_embeddings[1::2]
 
-    tpr, fpr, accuracy, best_thresholds = pfe_calculate_roc(thresholds, mu_embeddings1, mu_embeddings2,
+    tpr, fpr, accuracy, best_thresholds = pfe_calculate_roc(mu_embeddings1, mu_embeddings2,
                                                 sig_sq_embeddings1, sig_sq_embeddings2,
                                        np.asarray(actual_issame), nrof_folds=nrof_folds, pca=pca)
 #     thresholds = np.arange(0, 4, 0.001)
@@ -180,7 +185,7 @@ def pfe_evaluate(mu_embeddings, sig_sq_embeddings, actual_issame, nrof_folds=10,
 #     return tpr, fpr, accuracy, best_thresholds, val, val_std, far
     return tpr, fpr, accuracy, best_thresholds
 
-def pfe_calculate_roc(thresholds, mu_embeddings1, mu_embeddings2,
+def pfe_calculate_roc(mu_embeddings1, mu_embeddings2,
                                                 sig_sq_embeddings1, sig_sq_embeddings2,
                       actual_issame, nrof_folds=10, pca=0):
     assert (mu_embeddings1.shape[0] == mu_embeddings2.shape[0])
@@ -188,6 +193,9 @@ def pfe_calculate_roc(thresholds, mu_embeddings1, mu_embeddings2,
     assert (sig_sq_embeddings1.shape[0] == sig_sq_embeddings2.shape[0])
     assert (sig_sq_embeddings1.shape[1] == sig_sq_embeddings2.shape[1])
 
+
+    dist = pair_MLS_score(mu_embeddings1,mu_embeddings2,sig_sq_embeddings1,sig_sq_embeddings2)
+    thresholds = np.arange(np.min(dist), np.max(dist), 0.5)
     nrof_pairs = min(len(actual_issame), mu_embeddings1.shape[0])
     nrof_thresholds = len(thresholds)
     k_fold = KFold(n_splits=nrof_folds, shuffle=False)
@@ -199,11 +207,8 @@ def pfe_calculate_roc(thresholds, mu_embeddings1, mu_embeddings2,
     indices = np.arange(nrof_pairs)
     # print('pca', pca)
 
-    if pca == 0:
-        dist = pair_MLS_score(mu_embeddings1,mu_embeddings2,sig_sq_embeddings1,sig_sq_embeddings2)
-        print(dist)
-        print(np.max(dist))
-        print(np.min(dist))
+
+
 
     for fold_idx, (train_set, test_set) in enumerate(k_fold.split(indices)):
 
@@ -227,7 +232,7 @@ def pfe_calculate_roc(thresholds, mu_embeddings1, mu_embeddings2,
     return tpr, fpr, accuracy, best_thresholds
 
 
-def get_pfe_evaluate(carray, issame,model, pfe_model, nrof_folds = 5, tta = False):
+def get_pfe_evaluate(carray, issame, model, pfe_model, nrof_folds = 5, tta = False):
     device = torch.device("cpu")
     model.eval()
     pfe_model.eval()
@@ -259,4 +264,4 @@ def get_pfe_evaluate(carray, issame,model, pfe_model, nrof_folds = 5, tta = Fals
     buf = gen_plot(fpr, tpr)
     roc_curve = Image.open(buf)
     roc_curve_tensor = trans.ToTensor()(roc_curve)
-    return accuracy.mean(), best_thresholds.mean(), roc_curve_tensor, best_thresholds
+    return accuracy.mean(), best_thresholds.mean(), roc_curve_tensor
