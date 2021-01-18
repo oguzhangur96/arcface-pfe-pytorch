@@ -28,8 +28,8 @@ def training_args():
     parser.add_argument('--freeze_backbone', type=bool, default=True)
 
     # -- optimizer
-    parser.add_argument('--start_epoch', type=int, default=1)  #
-    parser.add_argument('--end_epoch', type=int, default=2)
+    parser.add_argument('--start_epoch', type=int, default=1) 
+    parser.add_argument('--end_epoch', type=int, default=5)
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--num_face_pb', type=int, default=4)
     parser.add_argument('--base_lr', type=float, default=1e-3)
@@ -39,13 +39,10 @@ def training_args():
 
     # -- dataset
     parser.add_argument('--casia_dir', type=str, default=casia_dir)
-    parser.add_argument('--lfw_dir', type=str, default=osp.join(lfw_dir, 'align_112_112'))
     parser.add_argument('--train_file', type=str, default=osp.join(root_dir, 'data/list_casia_mtcnncaffe_aligned_nooverlap.txt'))
-    parser.add_argument('--pairs_file', type=str, default=osp.join(lfw_dir, 'anno_file/pairs.txt'))
-    parser.add_argument('--try_times', type=int, default=5)
+
 
     # -- save or print
-    parser.add_argument('--is_debug', type=str, default=False)
     parser.add_argument('--save_to', type=str, default=osp.join(cp_dir, 'pfe'))
     parser.add_argument('--print_freq', type=int, default=1)
     parser.add_argument('--save_freq', type=int, default=1)
