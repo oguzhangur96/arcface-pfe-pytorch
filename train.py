@@ -150,14 +150,12 @@ class MetricFace(VerifyFace):
         if not os.path.exists(self.args.save_to):
             os.mkdir(self.args.save_to)
 
-        max_lfw_acc, min_train_loss = 0.0, 100
         for epoch in range(self.args.start_epoch, self.args.end_epoch + 1):
 
             start_time = time.time()
 
             train_loss = self._model_train(epoch)
             self.model['scheduler'].step()
-            # lfw_thresh, lfw_acc = self._verify_lfw()
 
             end_time = time.time()
             print('Single epoch cost time : %.2f mins' % ((end_time - start_time) / 60))
